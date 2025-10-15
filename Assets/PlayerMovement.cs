@@ -53,6 +53,12 @@ public class PlayerMovement : MonoBehaviour
                 animator.SetTrigger("Jump");
             }
         }
+      
+            if (Input.GetMouseButtonDown(0))
+            {
+                animator.SetTrigger("Stab");
+            }
+        
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
