@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c58850f300d4e4bd3a061ac2e4d96474
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - cameraTransform: {instanceID: 0}
+  - weaponHolder: {instanceID: 0}
+  - swordObject: {instanceID: 0}
+  - currentWeapon: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
