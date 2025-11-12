@@ -56,7 +56,7 @@ public class GunPickup : MonoBehaviour
 
     void PickupGun()
     {
-        if (playerMovement != null)
+        if (playerMovement != null && gunWeaponPrefab != null)
         {
             // Instantiate the gun weapon and equip it
             GameObject gunInstance = Instantiate(gunWeaponPrefab);
@@ -65,8 +65,14 @@ public class GunPickup : MonoBehaviour
             if (gunWeapon != null)
             {
                 playerMovement.EquipWeapon(gunWeapon);
-                Destroy(gameObject); // Remove the pickup from the scene
             }
+            
+            // Hide the pickup prompt
+            if (pickupPromptUI != null)
+                pickupPromptUI.SetActive(false);
+            
+            // Remove the pickup from the scene
+            Destroy(gameObject);
         }
     }
 
