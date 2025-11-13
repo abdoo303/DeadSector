@@ -1,10 +1,3 @@
-{
-    "m_SettingKeys": [
-        "VR Device Disabled",
-        "VR Device User Alert"
-    ],
-    "m_SettingValues": [
-        "False",
-        "False"
-    ]
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:4832bb463bb2f56f83b2046ed42217f99b482b9ab5898368bdc8d0610a1bf883
+size 519
