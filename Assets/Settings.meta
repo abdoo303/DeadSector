@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+version https://git-lfs.github.com/spec/v1
+oid sha256:fa4ade308d94f4213fe1712fbe10839379c26bc8b4ca3b4c43cf02ccc03a7687
+size 180
+=======
 fileFormatVersion: 2
 guid: 709f11a7f3c4041caa4ef136ea32d874
 folderAsset: yes
@@ -6,3 +11,4 @@ DefaultImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+>>>>>>> a4bfe8f12d117cbf2cd75a8b4dff110a52577f53

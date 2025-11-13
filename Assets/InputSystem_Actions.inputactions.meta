@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+version https://git-lfs.github.com/spec/v1
+oid sha256:5e2e2329ab736a64146d747108bde43aff5f940da6a98dd48bc35dc7c0b87098
+size 390
+=======
 fileFormatVersion: 2
 guid: 052faaac586de48259a63d0c4782560b
 ScriptedImporter:
@@ -12,3 +17,4 @@ ScriptedImporter:
   wrapperCodePath: 
   wrapperClassName: 
   wrapperCodeNamespace: 
+>>>>>>> a4bfe8f12d117cbf2cd75a8b4dff110a52577f53
