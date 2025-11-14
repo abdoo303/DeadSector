@@ -7,34 +7,52 @@ public class PlayerMovement : MonoBehaviour
     public float speed = 6f;
     public float jumpHeight = 2f;
     public float gravity = -9.81f;
-    public Transform cameraTransform;
+    
+    [Header("Camera Reference")]
+    [Tooltip("Assign the Main Camera here")]
+    public Camera mainCamera;
 
     [Header("Weapon Settings")]
     [Tooltip("Path to right hand in hierarchy, e.g., 'Armature/Hips/Spine/RightShoulder/RightArm/RightHand'")]
     public string rightHandPath = "mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"; 
     
     [Tooltip("Name of your sword GameObject under RightHand")]
-    public string swordObjectName = "mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/WeaponHolder"; // Name of sword GameObject in scene
-    //Char_cyber/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/
-    private Transform weaponHolder; // Will be found at runtime
-    private GameObject swordObject; // Will be found at runtime
-    public Weapon currentWeapon; // The currently equipped weapon (starts null)
+    public string swordObjectName = "mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand/WeaponHolder";
+    
+    private Transform weaponHolder;
+    private GameObject swordObject;
+    public Weapon currentWeapon;
     
     private CharacterController controller;
     private Vector3 velocity;
     private Animator animator;
-    private bool hasSword = true; // Start with sword
+    private bool hasSword = true;
+    private Transform cameraTransform; // We'll get this from mainCamera
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
+        // Get camera transform from the camera reference
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+        
+        if (mainCamera != null)
+        {
+            cameraTransform = mainCamera.transform;
+        }
+        else
+        {
+            Debug.LogError("No camera found! Please assign a camera to the PlayerMovement script.");
+        }
+
         // Find the right hand transform at runtime
         weaponHolder = transform.Find(rightHandPath);
         if (weaponHolder == null)
         {
-            // Try alternative search methods
             weaponHolder = FindDeepChild(transform, rightHandPath);
             if (weaponHolder == null)
             {
@@ -84,20 +102,49 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleMovement()
     {
+        if (cameraTransform == null) return; // Safety check
+
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
-        Vector3 dir = new Vector3(h, 0f, v).normalized;
-
-        if (dir.magnitude >= 0.1f)
+        
+        if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
         {
-            float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-            transform.rotation = Quaternion.Euler(0f, targetAngle, 0f);
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            // Calculate direction relative to camera
+            Vector3 forward = cameraTransform.forward;
+            Vector3 right = cameraTransform.right;
+            
+            // Keep movement on horizontal plane
+            forward.y = 0f;
+            right.y = 0f;
+            forward.Normalize();
+            right.Normalize();
+            
+            // Calculate desired move direction
+            Vector3 moveDir = (forward * v + right * h).normalized;
+            
+            // Rotate character to face movement direction
+            if (moveDir.magnitude >= 0.1f)
+            {
+                float targetAngle = Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
+                float turnSpeed = 360f;
+                
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation,
+                    Quaternion.Euler(0f, targetAngle, 0f),
+                    turnSpeed * Time.deltaTime
+                );
+            }
+            
+            // Move character
             controller.Move(moveDir * speed * Time.deltaTime);
             animator.SetFloat("Speed", 1f);
         }
-        else animator.SetFloat("Speed", 0f);
+        else
+        {
+            animator.SetFloat("Speed", 0f);
+        }
 
+        // Gravity and jumping
         if (controller.isGrounded)
         {
             velocity.y = -2f;
@@ -114,22 +161,10 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleActions()
     {
-        // // Handle sword attacks when carrying sword
-        // if (hasSword && currentWeapon == null)
-        // {
-            if (Input.GetButtonDown("Fire1")) // Or your attack input
-            {
-                animator.SetTrigger("Stab");
-            }
-        // }
-        // Handle gun fire when carrying gun
-        // else if (currentWeapon != null && currentWeapon is GunWeapon)
-        // {
-        //     if (Input.GetButtonDown("Fire1"))
-        //     {
-        //         currentWeapon.PrimaryAction(animator);
-        //     }
-        // }
+        if (Input.GetButtonDown("Fire1"))
+        {
+            animator.SetTrigger("Stab");
+        }
     }
 
     public void EquipWeapon(Weapon newWeapon)
@@ -187,18 +222,17 @@ public class PlayerMovement : MonoBehaviour
             // Set animation parameter based on weapon type
             if (currentWeapon is GunWeapon)
             {
-                animator.SetInteger("WeaponType", 1); // Switch to gun idle animation
+                animator.SetInteger("WeaponType", 1);
                 Debug.Log("Animation switched to Gun (WeaponType = 1)");
             }
             else if (currentWeapon is SwordWeapon)
             {
-                animator.SetInteger("WeaponType", 0); // Switch to sword idle animation
+                animator.SetInteger("WeaponType", 0);
                 Debug.Log("Animation switched to Sword (WeaponType = 0)");
             }
         }
         else if (hasSword)
         {
-            // Default to sword animation if no weapon equipped but sword is active
             animator.SetInteger("WeaponType", 0);
         }
     }
