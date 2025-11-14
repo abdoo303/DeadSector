@@ -114,22 +114,22 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleActions()
     {
-        // Handle sword attacks when carrying sword
-        if (hasSword && currentWeapon == null)
-        {
+        // // Handle sword attacks when carrying sword
+        // if (hasSword && currentWeapon == null)
+        // {
             if (Input.GetButtonDown("Fire1")) // Or your attack input
             {
                 animator.SetTrigger("Stab");
             }
-        }
+        // }
         // Handle gun fire when carrying gun
-        else if (currentWeapon != null && currentWeapon is GunWeapon)
-        {
-            if (Input.GetButtonDown("Fire1"))
-            {
-                currentWeapon.PrimaryAction(animator);
-            }
-        }
+        // else if (currentWeapon != null && currentWeapon is GunWeapon)
+        // {
+        //     if (Input.GetButtonDown("Fire1"))
+        //     {
+        //         currentWeapon.PrimaryAction(animator);
+        //     }
+        // }
     }
 
     public void EquipWeapon(Weapon newWeapon)
