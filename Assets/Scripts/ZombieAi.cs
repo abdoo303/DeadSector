@@ -49,34 +49,41 @@ public class ZombieAI : MonoBehaviour
 
         cooldownTimer -= Time.deltaTime;
 
-        // Optional: occasionally re-randomize offset to look dynamic
         if (Random.value < 0.01f)
         {
             personalOffset = Random.insideUnitSphere * 1.5f;
             personalOffset.y = 0;
         }
 
-        // Move towards the target with personal offset (prevents "basket" pile)
-        agent.isStopped = false;
-        agent.SetDestination(targetPlayer.position + personalOffset);
-
-        // Update animation movement speed
-        animator.SetFloat("MoveSpeed", agent.velocity.magnitude);
-
-        float dist = Vector3.Distance(transform.position, targetPlayer.position);
-
-        // ✅ Simplified attack trigger logic (no cooldown blocking animation)
-        if (dist <= attackRange)
+        // ✅ Only move if agent is on NavMesh
+        if (agent.isOnNavMesh)
         {
-            agent.isStopped = true;
-            animator.SetBool("isAttacking", true);
+            agent.isStopped = false;
+            agent.SetDestination(targetPlayer.position + personalOffset);
+
+            // Update animation movement speed
+            animator.SetFloat("MoveSpeed", agent.velocity.magnitude);
+
+            float dist = Vector3.Distance(transform.position, targetPlayer.position);
+
+            if (dist <= attackRange)
+            {
+                agent.isStopped = true;
+                animator.SetBool("isAttacking", true);
+            }
+            else
+            {
+                agent.isStopped = false;
+                animator.SetBool("isAttacking", false);
+            }
         }
         else
         {
-            agent.isStopped = false;
-            animator.SetBool("isAttacking", false);
+            // Optional: debug log if agent not on NavMesh
+            Debug.LogWarning($"{gameObject.name} is not on a NavMesh!");
         }
     }
+
 
     // 🎯 Called by Animation Event (OnAttackHit)
     public void OnAttackHit()
