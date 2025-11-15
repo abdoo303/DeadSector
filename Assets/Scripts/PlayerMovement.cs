@@ -161,7 +161,14 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleActions()
     {
+        // Left click = Slash
         if (Input.GetButtonDown("Fire1"))
+        {
+            animator.SetTrigger("Slash");
+        }
+
+        // Right click = Stab
+        if (Input.GetButtonDown("Fire2"))
         {
             animator.SetTrigger("Stab");
         }
