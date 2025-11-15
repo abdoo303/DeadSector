@@ -33,7 +33,7 @@ public class MainMenuManager : MonoBehaviour
         PlayerPrefs.DeleteKey("SavedLevel");
 
         // Load "FirstLevel" (which is at build index 1)
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene(2);
     }
 
     public void ContinueGame()
