@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
-    public int currentHealth;
+    public int currentHealth=100;
 
     void Start()
     {
@@ -17,6 +17,15 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0)
             Die();
+    }
+    public void AddHealth(int amount)
+    {
+        currentHealth += amount;
+
+        if (currentHealth > maxHealth)
+            currentHealth = maxHealth;
+
+        Debug.Log("Health increased by " + amount + ". Current health: " + currentHealth);
     }
 
     void Die()
