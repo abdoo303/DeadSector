@@ -9,11 +9,16 @@ public class SwordWeapon : Weapon
 
     public override void PrimaryAction(Animator animator)
     {
-        animator.SetTrigger("Stab");
+        animator.SetTrigger("Slash"); // or Stab
+    }
+
+    public override void SecondaryAction(Animator animator)
+    {
+        animator.SetTrigger("Stab"); // sword right click
     }
 
     public override string GetIdleAnimationState()
     {
-        return "CarryingSwordIdle"; // Your sword idle animation state name
+        return "CarryingSwordIdle";
     }
 }
