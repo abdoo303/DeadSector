@@ -94,11 +94,6 @@ public class ZombieAI : MonoBehaviour
         if (Vector3.Distance(transform.position, targetPlayer.position) > attackRange + 0.3f)
             return;
 
-        PlayerHealth playerHealth = targetPlayer.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage(10);   // zombie deals 10 damage
-        }
         Debug.Log("Zombie ATTACK HIT!");
     }
 
