@@ -3,24 +3,24 @@ using UnityEngine.UI;
 
 public class CrateInteract : MonoBehaviour
 {
-    [Header("Crate Settings")]
-    public int healthBoost = 1;          // Amount of health to add
-    public float interactDistance = 3f;  // Distance to interact with crate
-
-    [Header("UI (optional)")]
-    public Text interactText;            // UI Text to show "Press E to interact"
+    public bool restoresHealth = true;
+    public float interactDistance = 3f;
+    public Text interactText;
 
     private Transform player;
+    private Health playerHealth;
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+            playerHealth = playerObj.GetComponent<Health>();
+        }
 
-        if (player == null)
-            Debug.LogWarning("Player not found! Make sure it has the tag 'Player'.");
-
-        if (interactText != null)
-            interactText.enabled = false; // Hide UI prompt initially
+        if (interactText != null) interactText.enabled = false;
     }
 
     void Update()
@@ -29,30 +29,22 @@ public class CrateInteract : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, player.position);
 
-        // Show or hide the interact prompt
-        if (interactText != null)
-            interactText.enabled = distance <= interactDistance;
+        if (interactText != null) interactText.enabled = distance <= interactDistance;
 
-        // Press E to interact
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E) && distance <= interactDistance)
         {
-            if (distance <= interactDistance)
-            {
-                InteractWithCrate();
-            }
-            else
-            {
-                Debug.Log("No crate nearby to interact with.");
-            }
+            InteractWithCrate();
         }
     }
 
     void InteractWithCrate()
     {
-       
+        if (restoresHealth && playerHealth != null)
+        {
+            playerHealth.HealToMax();
+            Debug.Log("✅ Health restored!");
+        }
 
-        // Make crate disappear
         gameObject.SetActive(false);
-        Debug.Log("Crate disappeared!");
     }
 }
