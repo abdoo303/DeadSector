@@ -49,16 +49,7 @@ public class CrateInteract : MonoBehaviour
 
     void InteractWithCrate()
     {
-        // Give player health
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
-        {
-            playerHealth.AddHealth(healthBoost);
-        }
-        else
-        {
-            Debug.LogWarning("PlayerHealth component not found on Player!");
-        }
+       
 
         // Make crate disappear
         gameObject.SetActive(false);
