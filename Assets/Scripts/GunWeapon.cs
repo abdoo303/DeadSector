@@ -9,6 +9,7 @@ public class GunWeapon : Weapon
 {
     [Header("Gun Stats")]
     public float range = 100f;
+    public float damage = 25f;
 
     [Header("Ammo Settings")]
     public int magSize = 10;
@@ -38,6 +39,7 @@ public class GunWeapon : Weapon
     private Vector3 originalPosition;
     private Quaternion originalRotation;
     private Animator cachedAnimator;
+    private CombatSounds combatSounds;
 
     void Start()
     {
@@ -46,6 +48,9 @@ public class GunWeapon : Weapon
         // Auto-find Camera (Cameras are usually active, so Find works here)
         if (aimCamera == null) aimCamera = Camera.main;
         if (aimCamera != null) defaultFOV = aimCamera.fieldOfView;
+
+        // Find combat sounds component
+        combatSounds = FindObjectOfType<CombatSounds>();
 
         originalPosition = transform.localPosition;
         originalRotation = transform.localRotation;
@@ -111,10 +116,41 @@ public class GunWeapon : Weapon
     void Shoot()
     {
         if (aimCamera == null) return;
+
+        // Play gunshot sound
+        if (combatSounds != null)
+        {
+            combatSounds.PlayGunshotSound();
+        }
+
         Ray ray = aimCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        Vector3 targetPoint = Physics.Raycast(ray, out hit, range) ? hit.point : ray.GetPoint(range);
-        StartCoroutine(RenderTrace(targetPoint));
+
+        if (Physics.Raycast(ray, out hit, range))
+        {
+            // We hit something
+            Vector3 targetPoint = hit.point;
+
+            // Check if we hit an enemy
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                Health enemyHealth = hit.collider.GetComponent<Health>();
+                if (enemyHealth != null)
+                {
+                    enemyHealth.TakeDamage(damage);
+                    Debug.Log($"Gun hit {hit.collider.name} for {damage} damage!");
+                }
+            }
+
+            StartCoroutine(RenderTrace(targetPoint));
+        }
+        else
+        {
+            // Missed - just show trace to max range
+            Vector3 targetPoint = ray.GetPoint(range);
+            StartCoroutine(RenderTrace(targetPoint));
+            Debug.Log("Gun shot missed!");
+        }
     }
 
     IEnumerator RenderTrace(Vector3 hitPoint)

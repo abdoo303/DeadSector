@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(Health))]
 public class ZombieAI : MonoBehaviour
 {
     [Header("Target")]
@@ -9,10 +10,11 @@ public class ZombieAI : MonoBehaviour
     [Header("Combat")]
     public float attackRange = 1.4f;
     public float attackCooldown = 1.2f;
-    public int health = 2;
 
     private NavMeshAgent agent;
     private Animator animator;
+    private Health healthComponent;
+    private CombatSounds combatSounds;
     private float cooldownTimer = 0f;
     private bool isDead = false;
 
@@ -23,6 +25,13 @@ public class ZombieAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+        healthComponent = GetComponent<Health>();
+
+        // Subscribe to death event from Health component
+        if (healthComponent != null)
+        {
+            healthComponent.OnDied += Die;
+        }
     }
 
     void Start()
@@ -33,6 +42,9 @@ public class ZombieAI : MonoBehaviour
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p) targetPlayer = p.transform;
         }
+
+        // Find combat sounds
+        combatSounds = FindObjectOfType<CombatSounds>();
 
         // Assign a fixed random offset (so they circle instead of piling)
         personalOffset = Random.insideUnitSphere * 1.5f;  // 1.2–2.0 range feels good
@@ -70,6 +82,13 @@ public class ZombieAI : MonoBehaviour
             {
                 agent.isStopped = true;
                 animator.SetBool("isAttacking", true);
+
+                // Attack immediately when in range (no animation event needed)
+                if (cooldownTimer <= 0f)
+                {
+                    PerformAttack();
+                    cooldownTimer = attackCooldown;
+                }
             }
             else
             {
@@ -85,8 +104,8 @@ public class ZombieAI : MonoBehaviour
     }
 
 
-    // 🎯 Called by Animation Event (OnAttackHit)
-    public void OnAttackHit()
+    // Attack player immediately (no animation event needed)
+    private void PerformAttack()
     {
         if (isDead || targetPlayer == null) return;
 
@@ -94,32 +113,56 @@ public class ZombieAI : MonoBehaviour
         if (Vector3.Distance(transform.position, targetPlayer.position) > attackRange + 0.3f)
             return;
 
-        PlayerHealth playerHealth = targetPlayer.GetComponent<PlayerHealth>();
+        // Play zombie attack sound
+        if (combatSounds != null)
+        {
+            combatSounds.PlayZombieAttackedSound();
+        }
+
+        // Damage player using unified Health system
+        Health playerHealth = targetPlayer.GetComponent<Health>();
         if (playerHealth != null)
         {
-            playerHealth.TakeDamage(10);   // zombie deals 10 damage
+            playerHealth.TakeDamage(10f);   // zombie deals 10 damage
+            Debug.Log("🧟 Zombie ATTACK HIT! Dealt 10 damage to player.");
         }
-        Debug.Log("Zombie ATTACK HIT!");
+        else
+        {
+            Debug.LogWarning("⚠️ Player doesn't have Health component! Add Health script to player.");
+        }
     }
 
-    // 🧠 Simple damage system
-    public void TakeDamage(int dmg)
+    // Keep this for backwards compatibility if animation events are set up
+    public void OnAttackHit()
     {
-        if (isDead) return;
-        health -= dmg;
-        if (health <= 0) Die();
+        PerformAttack();
     }
 
     private void Die()
     {
+        if (isDead) return; // Prevent multiple death calls
+
         isDead = true;
-        agent.isStopped = true;
-        animator.SetBool("isAttacking", false);
-        animator.SetBool("isDead", true);
-        animator.SetFloat("MoveSpeed", 0f);
+
+        // Safely stop agent only if it's enabled and on NavMesh
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+        }
+
+        // Update animations
+        if (animator != null)
+        {
+            animator.SetBool("isAttacking", false);
+            animator.SetBool("isDead", true);
+            animator.SetFloat("MoveSpeed", 0f);
+        }
 
         // Disable NavMeshAgent to avoid pushing dead bodies
-        agent.enabled = false;
+        if (agent != null)
+        {
+            agent.enabled = false;
+        }
 
         // Optional: remove after 5 seconds
         Destroy(gameObject, 5f);

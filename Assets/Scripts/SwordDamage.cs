@@ -8,7 +8,7 @@ public class SwordDamage : MonoBehaviour
     public float stabDamagePercent = 0.30f;
     public float attackDistance = 3f;
     public float attackAngle = 30f;
-    
+
     private float damageMultiplier = 1f;
     private Transform playerTransform;
     private CombatSounds combatSounds;
@@ -39,7 +39,7 @@ public class SwordDamage : MonoBehaviour
 
         Collider[] hitColliders = Physics.OverlapSphere(playerTransform.position, attackDistance);
         bool hitSomething = false;
-        
+
         foreach (Collider col in hitColliders)
         {
             if (col.CompareTag("Enemy"))
@@ -47,24 +47,24 @@ public class SwordDamage : MonoBehaviour
                 if (IsTargetInAttackCone(col.transform))
                 {
                     Health zombieHealth = col.GetComponent<Health>();
-                    
+
                     if (zombieHealth != null)
                     {
                         float damage = zombieHealth.maxHealth * damagePercent * damageMultiplier;
                         zombieHealth.TakeDamage(damage);
-                        
+
                         if (combatSounds != null)
                         {
                             combatSounds.PlayZombieAttackedSound();
                         }
-                        
+
                         Debug.Log($"✅ Hit {col.name} with {attackType}! Damage: {damage:F1}");
                         hitSomething = true;
                     }
                 }
             }
         }
-        
+
         if (!hitSomething)
         {
             Debug.Log($"❌ {attackType} missed");
@@ -75,15 +75,15 @@ public class SwordDamage : MonoBehaviour
     {
         Vector3 directionToTarget = target.position - playerTransform.position;
         float distance = directionToTarget.magnitude;
-        
+
         if (distance > attackDistance) return false;
-        
+
         directionToTarget.y = 0;
         Vector3 forward = playerTransform.forward;
         forward.y = 0;
-        
+
         float angle = Vector3.Angle(forward, directionToTarget);
-        
+
         return angle <= attackAngle;
     }
 
@@ -108,7 +108,7 @@ public class SwordDamage : MonoBehaviour
     {
         StartCoroutine(ApplyMultiplier(multiplier, duration));
     }
-    
+
     private IEnumerator ApplyMultiplier(float multiplier, float duration)
     {
         damageMultiplier = multiplier;

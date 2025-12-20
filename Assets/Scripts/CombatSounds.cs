@@ -6,7 +6,8 @@ public class CombatSounds : MonoBehaviour
     public AudioClip swordSwingSound1;
     public AudioClip swordSwingSound2;
     public AudioClip zombieHitSound;
-    
+    public AudioClip gunShotSound;
+
     private AudioSource audioSource;
 
     void Start()
@@ -32,5 +33,13 @@ public class CombatSounds : MonoBehaviour
     public void PlayZombieAttackedSound()
     {
         audioSource.PlayOneShot(zombieHitSound);
+    }
+
+    public void PlayGunshotSound()
+    {
+        if (gunShotSound != null)
+        {
+            audioSource.PlayOneShot(gunShotSound);
+        }
     }
 }
