@@ -26,7 +26,7 @@ public class GunWeapon : Weapon
 
     [Header("Aiming Settings")]
     public float defaultFOV = 60f;
-    public float zoomedFOV = 40f;
+    public float zoomedFOV = 50f;
     public float zoomSpeed = 8f;
 
     [Header("Aiming Alignment (Iron Sights)")]

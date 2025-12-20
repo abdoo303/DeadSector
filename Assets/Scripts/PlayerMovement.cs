@@ -5,11 +5,13 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float speed = 6f;
+    public float aimSpeed = 2.5f;
     public float jumpHeight = 2f;
     public float gravity = -9.81f;
 
     [Header("Camera Reference")]
     public Camera mainCamera;
+    public SmoothCameraFollow cameraFollow;
 
     [Header("Weapon Settings")]
     public string rightHandPath = "mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand";
@@ -55,7 +57,10 @@ public class PlayerMovement : MonoBehaviour
         else
             Debug.LogError("No camera found!");
 
-        // Find the sword object 
+        if (cameraFollow == null)
+            cameraFollow = FindObjectOfType<SmoothCameraFollow>();
+
+        // Find the sword object
         if (weaponHolder != null)
         {
             Transform swordTransform = weaponHolder.Find(swordObjectName);
@@ -123,6 +128,7 @@ public class PlayerMovement : MonoBehaviour
 
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
+        bool isAiming = animator.GetBool("Aiming");
 
         if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
         {
@@ -135,14 +141,15 @@ public class PlayerMovement : MonoBehaviour
 
             Vector3 moveDir = (forward * v + right * h).normalized;
 
-            if (moveDir.magnitude >= 0.1f)
+            if (moveDir.magnitude >= 0.1f && !isAiming)
             {
                 float targetAngle = Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0f, targetAngle, 0f), 360f * Time.deltaTime);
             }
 
-            controller.Move(moveDir * speed * Time.deltaTime);
-            animator.SetFloat("Speed", 1f);
+            float currentSpeed = isAiming ? aimSpeed : speed;
+            controller.Move(moveDir * currentSpeed * Time.deltaTime);
+            animator.SetFloat("Speed", isAiming ? 0.5f : 1f);
         }
         else
         {
@@ -152,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
         if (controller.isGrounded)
         {
             velocity.y = -2f;
-            if (Input.GetButtonDown("Jump"))
+            if (Input.GetButtonDown("Jump") && !isAiming)
             {
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 animator.SetTrigger("Jump");

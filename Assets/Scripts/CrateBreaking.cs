@@ -49,12 +49,12 @@ public class CrateInteract : MonoBehaviour
 
     void InteractWithCrate()
     {
-        // Give player health using unified Health system
+        // Give player full health using unified Health system
         Health playerHealth = player.GetComponent<Health>();
         if (playerHealth != null)
         {
-            playerHealth.Heal(healthBoost);
-            Debug.Log($"Player healed for {healthBoost} HP from crate!");
+            playerHealth.HealToMax();
+            Debug.Log("Player fully healed from crate!");
         }
         else
         {
