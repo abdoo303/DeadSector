@@ -39,7 +39,6 @@ public class ZombieAI : MonoBehaviour
         personalOffset.y = 0;
 
         // Optional: slightly different movement behaviors
-        agent.stoppingDistance = 1f;
     }
 
     void Update()
@@ -49,41 +48,44 @@ public class ZombieAI : MonoBehaviour
 
         cooldownTimer -= Time.deltaTime;
 
+        // Random offset logic (Keep this if you like it)
         if (Random.value < 0.01f)
         {
             personalOffset = Random.insideUnitSphere * 1.5f;
             personalOffset.y = 0;
         }
 
-        // ✅ Only move if agent is on NavMesh
         if (agent.isOnNavMesh)
         {
-            agent.isStopped = false;
-            agent.SetDestination(targetPlayer.position + personalOffset);
-
-            // Update animation movement speed
-            animator.SetFloat("MoveSpeed", agent.velocity.magnitude);
-
             float dist = Vector3.Distance(transform.position, targetPlayer.position);
 
+            // 1. Check Distance FIRST
             if (dist <= attackRange)
             {
+                // CLOSE ENOUGH: Stop and Attack
                 agent.isStopped = true;
                 animator.SetBool("isAttacking", true);
+
+                // FORCE the run animation to stop immediately
+                animator.SetFloat("MoveSpeed", 0f);
+
+                // Optional: Make him look at you while attacking
+                Vector3 direction = (targetPlayer.position - transform.position).normalized;
+                direction.y = 0; // Keep flat
+                if (direction != Vector3.zero)
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 5f);
             }
             else
             {
+                // TOO FAR: Run to player
                 agent.isStopped = false;
                 animator.SetBool("isAttacking", false);
+
+                agent.SetDestination(targetPlayer.position + personalOffset);
+                animator.SetFloat("MoveSpeed", agent.velocity.magnitude);
             }
         }
-        else
-        {
-            // Optional: debug log if agent not on NavMesh
-            Debug.LogWarning($"{gameObject.name} is not on a NavMesh!");
-        }
     }
-
 
     // 🎯 Called by Animation Event (OnAttackHit)
     public void OnAttackHit()
