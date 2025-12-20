@@ -5,7 +5,7 @@ public class HealthBarBinder : MonoBehaviour
 {
     public HealthBarController barController; // optionally assign in inspector
     
-    void Awake()
+    void Start()
     {
         Debug.Log($"[HealthBarBinder] Awake called on {gameObject.name}");
         

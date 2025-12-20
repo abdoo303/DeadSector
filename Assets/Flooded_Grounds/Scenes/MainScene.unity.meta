@@ -1,15 +1,7 @@
 fileFormatVersion: 2
-guid: c0d944ca9defd20449bc336e50d75a08
-timeCreated: 1448785032
-licenseType: Store
+guid: 1b6a08dfc5630ef4e8091ae072e205cf
 DefaultImporter:
+  externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 48529
-  packageName: Flooded Grounds
-  packageVersion: 1.1
-  assetPath: Assets/Flooded_Grounds/Scenes/Scene_A.unity
-  uploadId: 227274

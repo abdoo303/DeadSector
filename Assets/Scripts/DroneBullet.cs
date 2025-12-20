@@ -21,7 +21,7 @@ public class DroneBullet : MonoBehaviour
 
         if (other.CompareTag("Enemy"))
         {
-            Health zombieHealth = other.GetComponent<Health>();
+            Health zombieHealth = other.GetComponentInParent<Health>();
             if (zombieHealth != null)
             {
                 zombieHealth.TakeDamage(damage);

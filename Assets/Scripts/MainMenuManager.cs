@@ -1,51 +1,50 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Required for loading scenes
-using UnityEngine.UI; // Required for UI elements like Buttons
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuManager : MonoBehaviour
 {
-    // Drag your "Continue" button here in the Inspector
     public Button continueButton;
-
-    private int levelToLoad;
+    public int gameSceneIndex = 2; // The Build Index of your main game scene
 
     void Start()
     {
-        // Check if we have a saved level
-        if (PlayerPrefs.HasKey("SavedLevel"))
-        {
-            // If we do, enable the continue button
-            continueButton.interactable = true;
+        // 1. GET SAVED DATA
+        // If no data exists, default to 1.
+        int savedProgress = PlayerPrefs.GetInt("SavedLevel", 1);
 
-            // Get the saved level index
-            levelToLoad = PlayerPrefs.GetInt("SavedLevel");
+        // 2. CHECK CONDITION
+        // Only enable Continue if we have beaten Level 1 (so saved level is 2)
+        if (savedProgress >= 2)
+        {
+            continueButton.interactable = true;
         }
         else
         {
-            // If not, disable the continue button
             continueButton.interactable = false;
         }
     }
 
     public void StartNewGame()
     {
-        // Delete any old save data
-        PlayerPrefs.DeleteKey("SavedLevel");
+        // 1. RESET PROGRESS to Level 1
+        PlayerPrefs.SetInt("SavedLevel", 1);
+        PlayerPrefs.Save();
 
-        // Load "FirstLevel" (which is at build index 1)
-        SceneManager.LoadScene(2);
+        // 2. Load the game
+        SceneManager.LoadScene(gameSceneIndex);
     }
 
     public void ContinueGame()
     {
-        // Load the scene we saved in PlayerPrefs
-        // This will be 2 (SecondLevel) or higher
-        SceneManager.LoadScene(levelToLoad);
+        // 1. Load the game scene
+        // Your LevelManager script inside this scene will read "SavedLevel = 2"
+        // and instantly teleport you to the Boss.
+        SceneManager.LoadScene(gameSceneIndex);
     }
 
     public void QuitGame()
     {
-        // Quits the application (only works in a built game, not the editor)
         Application.Quit();
     }
 }
