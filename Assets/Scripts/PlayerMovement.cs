@@ -18,8 +18,9 @@ public class PlayerMovement : MonoBehaviour
     public Transform weaponHolder;
     private GameObject swordObject;
     public Weapon currentWeapon;
-    [Header("Aiming Rotation")]
-    public float aimRotateSpeed = 720f;
+    [Header("Mouse Rotation Settings")]
+    [Range(1f, 1000f)]
+    public float mouseRotationSpeed = 360f;
     public float aimRayDistance = 100f;
 
     private CharacterController controller;
@@ -85,36 +86,6 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleMovement();
         HandleActions();
-        if (animator.GetBool("Aiming"))
-        {
-            RotatePlayerTowardReticle();
-        }
-
-    }
-    void RotatePlayerTowardReticle()
-    {
-        if (mainCamera == null) return;
-
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        Vector3 targetPoint;
-
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, aimRayDistance))
-            targetPoint = hit.point;
-        else
-            targetPoint = ray.GetPoint(aimRayDistance);
-
-        Vector3 lookDir = targetPoint - transform.position;
-        lookDir.y = 0f;
-
-        if (lookDir.sqrMagnitude < 0.001f) return;
-
-        Quaternion targetRot = Quaternion.LookRotation(lookDir);
-        transform.rotation = Quaternion.RotateTowards(
-            transform.rotation,
-            targetRot,
-            aimRotateSpeed * Time.deltaTime
-        );
     }
 
     void HandleMovement()
@@ -124,8 +95,25 @@ public class PlayerMovement : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
+        // Check if player is aiming
+        bool isAiming = Input.GetButton("Fire2");
+
+        // ALWAYS rotate the player body to face the camera direction
+        Vector3 lookDir = cameraTransform.forward;
+        lookDir.y = 0f;
+        if (lookDir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(lookDir);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                mouseRotationSpeed * Time.deltaTime
+            );
+        }
+
         if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
         {
+            // Calculate movement direction relative to camera
             Vector3 forward = cameraTransform.forward;
             Vector3 right = cameraTransform.right;
             forward.y = 0f;
@@ -134,12 +122,6 @@ public class PlayerMovement : MonoBehaviour
             right.Normalize();
 
             Vector3 moveDir = (forward * v + right * h).normalized;
-
-            if (moveDir.magnitude >= 0.1f)
-            {
-                float targetAngle = Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0f, targetAngle, 0f), 360f * Time.deltaTime);
-            }
 
             controller.Move(moveDir * speed * Time.deltaTime);
             animator.SetFloat("Speed", 1f);

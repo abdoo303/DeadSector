@@ -10,11 +10,13 @@ public class ZombieAI : MonoBehaviour
     public float attackRange = 1.4f;
     public float attackCooldown = 1.2f;
     public int health = 2;
+    public float damageAmount = 10f;
 
     private NavMeshAgent agent;
     private Animator animator;
     private float cooldownTimer = 0f;
     private bool isDead = false;
+    private bool hasDealtDamage = false;
 
     // 🧩 Added field: each zombie gets a unique offset
     private Vector3 personalOffset;
@@ -74,12 +76,21 @@ public class ZombieAI : MonoBehaviour
                 direction.y = 0; // Keep flat
                 if (direction != Vector3.zero)
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 5f);
+
+                // Deal damage immediately when in range and cooldown ready
+                if (cooldownTimer <= 0 && !hasDealtDamage)
+                {
+                    DealDamageToPlayer();
+                    cooldownTimer = attackCooldown;
+                    hasDealtDamage = true;
+                }
             }
             else
             {
                 // TOO FAR: Run to player
                 agent.isStopped = false;
                 animator.SetBool("isAttacking", false);
+                hasDealtDamage = false;
 
                 agent.SetDestination(targetPlayer.position + personalOffset);
                 animator.SetFloat("MoveSpeed", agent.velocity.magnitude);
@@ -87,21 +98,30 @@ public class ZombieAI : MonoBehaviour
         }
     }
 
-    // 🎯 Called by Animation Event (OnAttackHit)
-    public void OnAttackHit()
+    // Called immediately when zombie is in range
+    void DealDamageToPlayer()
     {
         if (isDead || targetPlayer == null) return;
 
-        // Only apply damage if close enough
-        if (Vector3.Distance(transform.position, targetPlayer.position) > attackRange + 0.3f)
-            return;
+        // Play attack sound using CombatSounds singleton
+        if (CombatSounds.Instance != null)
+        {
+            CombatSounds.Instance.PlayZombieAttackSound();
+        }
 
+        // Deal damage using Health script
         Health playerHealth = targetPlayer.GetComponent<Health>();
         if (playerHealth != null)
         {
-            playerHealth.TakeDamage(10);   // zombie deals 10 damage
+            playerHealth.TakeDamage(damageAmount);
+            Debug.Log($"Zombie dealt {damageAmount} damage to player!");
         }
-        Debug.Log("Zombie ATTACK HIT!");
+    }
+
+    // Empty stub to prevent animation event errors - remove animation event in Unity later
+    public void OnAttackHit()
+    {
+        // Damage is now handled instantly in DealDamageToPlayer()
     }
 
     // 🧠 Simple damage system
@@ -112,7 +132,7 @@ public class ZombieAI : MonoBehaviour
         if (health <= 0) Die();
     }
 
-    private void Die()
+    public void Die()
     {
         isDead = true;
         agent.isStopped = true;
@@ -123,7 +143,7 @@ public class ZombieAI : MonoBehaviour
         // Disable NavMeshAgent to avoid pushing dead bodies
         agent.enabled = false;
 
-        // Optional: remove after 5 seconds
-        Destroy(gameObject, 5f);
+        // Remove after 1 second
+        Destroy(gameObject, 1f);
     }
 }

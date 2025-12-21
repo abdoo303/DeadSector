@@ -99,6 +99,9 @@ public class GunWeapon : Weapon
         isAiming = true;
         animator.SetBool("Aiming", true);
         if (reticleUI != null) reticleUI.SetActive(true);
+
+        // Hide player body when aiming
+        HidePlayerBody(true);
     }
 
     public void StopAiming(Animator animator)
@@ -106,14 +109,51 @@ public class GunWeapon : Weapon
         isAiming = false;
         animator.SetBool("Aiming", false);
         if (reticleUI != null) reticleUI.SetActive(false);
+
+        // Show player body when not aiming
+        HidePlayerBody(false);
+    }
+
+    void HidePlayerBody(bool hide)
+    {
+        // Find player's skinned mesh renderers (body parts)
+        Transform player = transform.root; // Get the root player object
+        SkinnedMeshRenderer[] renderers = player.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        foreach (SkinnedMeshRenderer renderer in renderers)
+        {
+            // Hide body but keep weapon visible
+            if (!renderer.gameObject.name.Contains("Weapon") &&
+                !renderer.gameObject.name.Contains("Gun") &&
+                !renderer.gameObject.name.Contains("Sword"))
+            {
+                renderer.shadowCastingMode = hide ? UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly : UnityEngine.Rendering.ShadowCastingMode.On;
+            }
+        }
     }
 
     void Shoot()
     {
         if (aimCamera == null) return;
-        Ray ray = aimCamera.ScreenPointToRay(Input.mousePosition);
+
+        // Shoot from center of screen when aiming, otherwise from mouse position
+        Vector3 shootPoint = isAiming ? new Vector3(Screen.width / 2f, Screen.height / 2f, 0f) : Input.mousePosition;
+
+        Ray ray = aimCamera.ScreenPointToRay(shootPoint);
         RaycastHit hit;
         Vector3 targetPoint = Physics.Raycast(ray, out hit, range) ? hit.point : ray.GetPoint(range);
+
+        // Check if we hit an enemy
+        if (hit.collider != null && hit.collider.CompareTag("Enemy"))
+        {
+            Health enemyHealth = hit.collider.GetComponent<Health>();
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(20f); // Gun damage
+                Debug.Log($"Gun hit {hit.collider.name}!");
+            }
+        }
+
         StartCoroutine(RenderTrace(targetPoint));
     }
 
@@ -166,7 +206,8 @@ public class GunWeapon : Weapon
     void HandleReticleFollow()
     {
         if (!isAiming || reticleUI == null) return;
-        reticleUI.transform.position = Input.mousePosition;
+        // Center reticle when aiming
+        reticleUI.transform.position = new Vector3(Screen.width / 2f, Screen.height / 2f, 0f);
     }
 
     void UpdateAmmoUI()

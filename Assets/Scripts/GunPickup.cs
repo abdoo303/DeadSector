@@ -1,8 +1,5 @@
 using UnityEngine;
 
-
-using UnityEngine;
-
 public class GunPickup : MonoBehaviour
 {
     private WeaponSwitcher weaponSwitcher;
@@ -81,6 +78,13 @@ public class GunPickup : MonoBehaviour
 
         // EnableGun in WeaponSwitcher will handle the UI assignment now
         weaponSwitcher.EnableGun(gunInstance);
+
+        // Notify LevelManager that gun has been picked up
+        LevelManager levelManager = FindObjectOfType<LevelManager>();
+        if (levelManager != null)
+        {
+            levelManager.OnGunPickedUp();
+        }
 
         if (pickupPromptUI != null) pickupPromptUI.SetActive(false);
         Destroy(gameObject);

@@ -11,7 +11,7 @@ public class Health : MonoBehaviour
     [Header("Game Over Settings (For Player)")]
     public bool isPlayer = false;
     public string gameOverSceneName = "GameOver"; // Name of your game over scene
-
+    public LoseScreenManager loseManager;
     // events
     public event Action<float, float> OnHealthChanged; // (current, max)
     public event Action OnDied;
@@ -53,7 +53,7 @@ public class Health : MonoBehaviour
     void Die()
     {
         OnDied?.Invoke();
-        
+
         // If this is the player, trigger game over
         if (isPlayer)
         {
@@ -62,7 +62,19 @@ public class Health : MonoBehaviour
             SceneManager.LoadScene(gameOverSceneName);
             // Alternative: Use scene index: SceneManager.LoadScene(0);
         }
-        // For non-players (like zombies), just invoke the event
-        // The ZombieAI script will handle the death animation and destruction
+        else
+        {
+            // For non-players (enemies like zombies)
+            ZombieAI zombie = GetComponent<ZombieAI>();
+            if (zombie != null)
+            {
+                zombie.Die();
+            }
+            else
+            {
+                // If no ZombieAI, just destroy after a delay
+                Destroy(gameObject, 1f);
+            }
+        }
     }
 }

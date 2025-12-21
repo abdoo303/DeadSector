@@ -12,10 +12,12 @@ public class BossController : MonoBehaviour
     public float detectionRange = 20f; // How far he sees you
     public float attackRange = 2.5f;   // How close to stop and hit
     public float timeBetweenAttacks = 2f; // Cooldown
+    public float damageAmount = 20f;
     private int attackCount = 0; // 0 = First hit, 1 = Second hit
 
     private float attackTimer = 0f;
     private bool isDead = false;
+    private bool hasDealtDamage = false;
 
     void Start()
     {
@@ -46,10 +48,12 @@ public class BossController : MonoBehaviour
             agent.isStopped = true;
             animator.SetBool("IsRunning", false);
 
-            if (attackTimer <= 0)
+            if (attackTimer <= 0 && !hasDealtDamage)
             {
                 PerformAttack();
+                DealDamageToPlayer();
                 attackTimer = timeBetweenAttacks;
+                hasDealtDamage = true;
             }
         }
         else if (distanceToPlayer <= detectionRange)
@@ -58,12 +62,14 @@ public class BossController : MonoBehaviour
             agent.isStopped = false;
             agent.SetDestination(player.position);
             animator.SetBool("IsRunning", true);
+            hasDealtDamage = false;
         }
         else
         {
             // IDLE (Player is too far)
             agent.isStopped = true;
             animator.SetBool("IsRunning", false);
+            hasDealtDamage = false;
         }
 
         // Cooldown timer
@@ -95,6 +101,25 @@ public class BossController : MonoBehaviour
 
         // Increase the counter for next time
         attackCount++;
+    }
+
+    void DealDamageToPlayer()
+    {
+        if (isDead || player == null) return;
+
+        // Play attack sound using CombatSounds singleton
+        if (CombatSounds.Instance != null)
+        {
+            CombatSounds.Instance.PlayBossAttackSound();
+        }
+
+        // Deal damage using Health script
+        Health playerHealth = player.GetComponent<Health>();
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(damageAmount);
+            Debug.Log($"Boss dealt {damageAmount} damage to player!");
+        }
     }
 
     // Call this from the Health Script when HP reaches 0

@@ -9,14 +9,15 @@ public class SwordDamage : MonoBehaviour
     public float attackDistance = 3f;
     public float attackAngle = 30f;
 
+    [Header("Ammo Reward")]
+    public int ammoPerKill = 10;
+
     private float damageMultiplier = 1f;
     private Transform playerTransform;
-    private CombatSounds combatSounds;
 
     void Start()
     {
         playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
-        combatSounds = FindObjectOfType<CombatSounds>();
     }
 
     public void PerformSlashAttack()
@@ -40,8 +41,12 @@ public class SwordDamage : MonoBehaviour
         Collider[] hitColliders = Physics.OverlapSphere(playerTransform.position, attackDistance);
         bool hitSomething = false;
 
+        Debug.Log($"🔍 Found {hitColliders.Length} colliders in range");
+
         foreach (Collider col in hitColliders)
         {
+            Debug.Log($"🔍 Checking collider: {col.name}, Tag: {col.tag}");
+
             if (col.CompareTag("Enemy"))
             {
                 if (IsTargetInAttackCone(col.transform))
@@ -51,23 +56,41 @@ public class SwordDamage : MonoBehaviour
                     if (zombieHealth != null)
                     {
                         float damage = zombieHealth.maxHealth * damagePercent * damageMultiplier;
+
+                        // Check if this will kill the zombie
+                        bool willKill = zombieHealth.currentHealth <= damage;
+
                         zombieHealth.TakeDamage(damage);
 
-                        if (combatSounds != null)
+                        if (CombatSounds.Instance != null)
                         {
-                            combatSounds.PlayZombieAttackedSound();
+                            CombatSounds.Instance.PlayZombieAttackedSound();
+                        }
+
+                        // Give ammo reward if killed
+                        if (willKill)
+                        {
+                            GiveAmmoReward();
                         }
 
                         Debug.Log($"✅ Hit {col.name} with {attackType}! Damage: {damage:F1}");
                         hitSomething = true;
                     }
+                    else
+                    {
+                        Debug.LogWarning($"⚠️ {col.name} has Enemy tag but NO Health component!");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"❌ {col.name} not in attack cone");
                 }
             }
         }
 
         if (!hitSomething)
         {
-            Debug.Log($"❌ {attackType} missed");
+            Debug.Log($"❌ {attackType} missed - no valid enemies hit");
         }
     }
 
@@ -89,18 +112,18 @@ public class SwordDamage : MonoBehaviour
 
     private void PlaySlashSound()
     {
-        if (combatSounds != null)
+        if (CombatSounds.Instance != null)
         {
-            if (Random.value > 0.5f) combatSounds.PlaySwordSound1();
-            else combatSounds.PlaySwordSound2();
+            if (Random.value > 0.5f) CombatSounds.Instance.PlaySwordSound1();
+            else CombatSounds.Instance.PlaySwordSound2();
         }
     }
 
     private void PlayStabSound()
     {
-        if (combatSounds != null)
+        if (CombatSounds.Instance != null)
         {
-            combatSounds.PlaySwordSound1();
+            CombatSounds.Instance.PlaySwordSound1();
         }
     }
 
@@ -115,5 +138,26 @@ public class SwordDamage : MonoBehaviour
         Debug.Log($"⚡ Damage multiplier: {multiplier}x for {duration}s!");
         yield return new WaitForSeconds(duration);
         damageMultiplier = 1f;
+    }
+
+    // Permanently increase damage by multiplying the current multiplier
+    public void IncreaseDamagePermanently(float factor)
+    {
+        damageMultiplier *= factor;
+        Debug.Log($"⚡ Damage permanently increased! New multiplier: {damageMultiplier}x");
+    }
+
+    // Give ammo reward to the player's gun
+    private void GiveAmmoReward()
+    {
+        if (playerTransform == null) return;
+
+        // Find the gun weapon
+        GunWeapon gun = playerTransform.GetComponentInChildren<GunWeapon>(true); // true = include inactive
+        if (gun != null)
+        {
+            gun.AddAmmo(ammoPerKill);
+            Debug.Log($"💰 Sword kill! Gained {ammoPerKill} ammo");
+        }
     }
 }

@@ -23,6 +23,10 @@ public class LevelManager : MonoBehaviour
     public GameObject level1Zombies;
     public float panDuration = 5.0f;
 
+    [Header("Level 1 Completion Requirements")]
+    [Tooltip("Player must pick up the gun to progress to Level 2")]
+    public bool requireGunPickup = true;
+
     [Header("LEVEL 2 SETUP (The Boss)")]
     public Transform bossSpawnPoint;
     public GameObject boss;
@@ -32,6 +36,7 @@ public class LevelManager : MonoBehaviour
     // Internal State
     private int _internalLevelTracker;
     private bool isLevel1Active = false;
+    private bool hasPickedUpGun = false;
 
     // Camera Restore Data
     private Transform originalCamParent;
@@ -83,13 +88,24 @@ public class LevelManager : MonoBehaviour
         // B. LEVEL 1 GAMEPLAY CHECK
         if (isLevel1Active)
         {
-            if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0)
+            // Check if player has completed level objectives
+            bool zombiesCleared = GameObject.FindGameObjectsWithTag("Enemy").Length == 0;
+            bool canProgress = zombiesCleared && (!requireGunPickup || hasPickedUpGun);
+
+            if (canProgress)
             {
                 currentLevel = 2;
                 _internalLevelTracker = 2;
                 CompleteLevel1();
             }
         }
+    }
+
+    // Call this from GunPickup script when player picks up the gun
+    public void OnGunPickedUp()
+    {
+        hasPickedUpGun = true;
+        Debug.Log("✅ Gun picked up! Can now progress when zombies are cleared.");
     }
 
     // ================= LEVEL 1 LOGIC =================

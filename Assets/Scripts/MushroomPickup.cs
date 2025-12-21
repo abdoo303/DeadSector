@@ -3,8 +3,7 @@ using UnityEngine;
 public class MushroomPickup : MonoBehaviour
 {
     public GameObject pickupText; // UI text to show
-    public float damageMultiplier = 2f;
-    public float duration = 10f;
+    public float damageFactor = 2f; // Multiply damage by this factor (2 = doubles damage)
 
     private bool playerInRange = false;
 
@@ -14,12 +13,12 @@ public class MushroomPickup : MonoBehaviour
         {
             Debug.Log("Mushroom picked up!");
 
-            // Apply damage multiplier if player has SwordDamage
+            // Permanently increase sword damage by the factor
             SwordDamage sword = GameObject.FindGameObjectWithTag("Player")?.GetComponentInChildren<SwordDamage>();
             if (sword != null)
             {
-                sword.ApplyDamageMultiplierSafe(damageMultiplier, duration);
-                Debug.Log("Damage multiplier applied to sword");
+                sword.IncreaseDamagePermanently(damageFactor);
+                Debug.Log($"Sword damage permanently multiplied by {damageFactor}x!");
             }
 
             // Hide UI and destroy mushroom
